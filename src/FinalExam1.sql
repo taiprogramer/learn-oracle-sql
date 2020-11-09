@@ -1,9 +1,9 @@
 -- Create primary entity first
 
 CREATE TABLE sinhvien (
-	ID CHAR(8) PRIMARY KEY,
-	ten VARCHAR2(15),
-	ho VARCHAR2(15)
+    ID CHAR(8) PRIMARY KEY,
+    ten VARCHAR2(15),
+    ho VARCHAR2(15)
 );
 
 -- sinhvien constraints
@@ -24,8 +24,8 @@ INSERT INTO sinhvien VALUES ('B2014748', 'Khang', 'Lâm Hoàng');
 ALTER TABLE sinhvien MODIFY ho VARCHAR2(50);
 
 CREATE TABLE nganh (
-	ID INT PRIMARY KEY,
-	ten_nganh VARCHAR2(50)
+    ID INT PRIMARY KEY,
+    ten_nganh VARCHAR2(50)
 );
 
 -- nganh insert
@@ -34,13 +34,14 @@ INSERT INTO nganh VALUES (2, 'Công nghệ sinh học - CTTT');
 INSERT INTO nganh VALUES (3, 'Công nghệ thông tin - CTCLC');
 
 CREATE TABLE loai_diem(
-	ID INT PRIMARY KEY,
-	ten_loai VARCHAR2(20)
+    ID INT PRIMARY KEY,
+    ten_loai VARCHAR2(20)
 );
 
 INSERT INTO loai_diem VALUES (1, 'Điểm thi');
 INSERT INTO loai_diem VALUES (2, 'Điểm học bạ');
 
+-- "Don't use this schema in production, It's stupid." - taiprogramer
 CREATE TABLE trung_tuyen (
     mssv CHAR(8),
     ma_nganh INT,
@@ -107,3 +108,25 @@ SELECT mssv, ho, ten, ten_nganh, ten_loai as loai_diem, diem FROM
 trung_tuyen tt INNER JOIN sinhvien sv ON sv.id = tt.mssv
 INNER JOIN nganh ON nganh.id = tt.ma_nganh
 INNER JOIN loai_diem ld ON ld.id = tt.ma_loai_diem;
+
+
+CREATE TABLE thay_doi_diem(
+    username VARCHAR(20),
+    modified_time TIMESTAMP,
+    mssv CHAR(8),
+    old_diem FLOAT,
+    new_diem FLOAT
+);
+
+CREATE OR REPLACE TRIGGER store_thay_doi_diem
+AFTER UPDATE ON trung_tuyen
+FOR EACH ROW
+DECLARE
+BEGIN
+    INSERT INTO thay_doi_diem VALUES(USER, SYSDATE, :old.mssv, :old.diem, :new.diem);
+END;
+
+-- Test trigger
+UPDATE trung_tuyen SET diem = 25.5 WHERE mssv = 'B2005638';
+SELECT * FROM thay_doi_diem;
+UPDATE trung_tuyen SET diem = 24.5 WHERE mssv = 'B2005638';
